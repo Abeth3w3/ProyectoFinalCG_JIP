@@ -2,20 +2,27 @@
 
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Movimiento")]
     public float speed = 6f;
     public float gravity = -9.81f;
     public float jumpHeight = 1.5f;
 
+    [Header("Rotación Suave")]
+    public float turnSmoothTime = 0.1f;
+    private float turnSmoothVelocity;
+
+    [Header("Referencias")]
+    public Transform cameraTransform;
+    public Transform groundCheck;
+    public LayerMask groundMask;
+    public Animator animator;
+
+    [Header("Detección de suelo")]
+    public float groundDistance = 0.4f;
+
     private CharacterController controller;
     private Vector3 velocity;
     private bool isGrounded;
-
-    public Transform groundCheck;
-    public float groundDistance = 0.4f;
-    public LayerMask groundMask;
-
-    // 🔸 Nueva referencia: la cámara
-    public Transform cameraTransform;
 
     void Start()
     {
@@ -24,27 +31,48 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        // Verifica si está en el suelo
+        // 🔹 Verificar si está en el suelo
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+
         if (isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
-        // Movimiento del jugador
+        // 🔹 Movimiento con cámara
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
+        Vector3 direction = new Vector3(x, 0f, z).normalized;
 
-        // 🔸 Dirección basada en la cámara
-        Vector3 move = cameraTransform.forward * z + cameraTransform.right * x;
-        move.y = 0f; // evita que el jugador se incline
+        if (direction.magnitude >= 0.1f)
+        {
+            // Calcular ángulo de rotación según cámara
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
 
-        // Mover
-        controller.Move(move.normalized * speed * Time.deltaTime);
+            // Aplicar rotación al Player (no al modelo)
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-        // Salto
+            // Mover hacia adelante
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            controller.Move(moveDir.normalized * speed * Time.deltaTime);
+
+            // 🔹 Actualizar parámetro "Speed" para animaciones
+            if (animator != null)
+                animator.SetFloat("Speed", 1f);
+        }
+        else
+        {
+            // Si no se mueve, poner la animación en idle
+            if (animator != null)
+                animator.SetFloat("Speed", 0f);
+        }
+
+        // 🔹 Salto
         if (Input.GetButtonDown("Jump") && isGrounded)
+        {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
 
-        // Gravedad
+        // 🔹 Aplicar gravedad
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
     }
