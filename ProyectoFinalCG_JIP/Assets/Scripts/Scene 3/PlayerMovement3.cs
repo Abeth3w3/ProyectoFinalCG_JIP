@@ -2,27 +2,24 @@
 
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("Movimiento")]
-    public float speed = 6f;
+    [Header("Movement Settings")]
+    public float walkSpeed = 4f;
+    public float runSpeed = 7f;
+    public float jumpHeight = 2f;
     public float gravity = -9.81f;
-    public float jumpHeight = 1.5f;
 
-    [Header("Rotación Suave")]
-    public float turnSmoothTime = 0.1f;
-    private float turnSmoothVelocity;
-
-    [Header("Referencias")]
-    public Transform cameraTransform;
-    public Transform groundCheck;
-    public LayerMask groundMask;
+    [Header("References")]
+    public Transform cam;
+    public Transform joeModel; // Modelo de Joe
     public Animator animator;
-
-    [Header("Detección de suelo")]
-    public float groundDistance = 0.4f;
 
     private CharacterController controller;
     private Vector3 velocity;
     private bool isGrounded;
+    private bool isRunning;
+    
+   
+    
 
     void Start()
     {
@@ -31,54 +28,57 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        // 🔹 Verificar si está en el suelo
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
-
+        // --- Comprobar si está en el suelo ---
+        isGrounded = controller.isGrounded;
         if (isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
-        // 🔹 Movimiento con cámara
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
-        Vector3 direction = new Vector3(x, 0f, z).normalized;
+        // --- Movimiento horizontal ---
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+
+        // --- Detectar si está corriendo ---
+        isRunning = Input.GetKey(KeyCode.LeftShift);
+        float currentSpeed = isRunning ? runSpeed : walkSpeed;
 
         if (direction.magnitude >= 0.1f)
         {
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-
-            // Rota solo el jugador (padre)
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
-
-            // Mueve al jugador hacia la dirección de la cámara
+            // Dirección según cámara
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            controller.Move(moveDir.normalized * speed * Time.deltaTime);
 
-            // Actualiza el parámetro Speed en el Animator
-            animator.SetFloat("Speed", 1f, 0.1f, Time.deltaTime);
+            // Movimiento del CharacterController
+            controller.Move(moveDir.normalized * currentSpeed * Time.deltaTime);
+
+            // Rotar modelo Joe sin root motion
+            joeModel.rotation = Quaternion.Slerp(joeModel.rotation, Quaternion.Euler(0f, targetAngle, 0f), 10f * Time.deltaTime);
+
+            // Animaciones de caminar o correr
+            animator.SetFloat("Speed", currentSpeed);
+            animator.SetBool("isRunning", isRunning);
+            animator.SetBool("isJumping", false);
         }
         else
         {
-            animator.SetFloat("Speed", 0f, 0.1f, Time.deltaTime);
+            animator.SetFloat("Speed", 0f);
         }
 
-
-        // 🔹 Salto
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        // --- Saltar ---
+        if (Input.GetButtonDown("Jump"))
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            animator.SetBool("isJumping", true);
         }
 
-        // 🔹 Aplicar gravedad
+        // --- Aplicar gravedad ---
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
 
-        // Evita que el modelo se desplace solo
-        if (animator != null)
+        // --- Control de aterrizaje ---
+        if (isGrounded && animator.GetBool("isJumping"))
         {
-            animator.transform.localPosition = Vector3.zero;
+            animator.SetBool("isJumping", false);
         }
-
     }
-
 }
