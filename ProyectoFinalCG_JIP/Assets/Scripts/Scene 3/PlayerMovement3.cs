@@ -1,71 +1,89 @@
 ﻿using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement3 : MonoBehaviour
 {
-    [Header("Movement Settings")]
-    public float walkSpeed = 4f;
-    public float runSpeed = 7f;
-    public float jumpHeight = 2f;
-    public float gravity = -9.81f;
-
-    [Header("References")]
+    public CharacterController controller;
     public Transform cam;
-    public Transform joeModel; // Modelo de Joe
     public Animator animator;
 
-    private CharacterController controller;
-    private Vector3 velocity;
-    private bool isGrounded;
-    private bool isRunning;
-    
-   
-    
+    [Header("Movement Settings")]
+    public float walkSpeed = 6f;
+    public float runSpeed = 10f;
+    public float crouchSpeed = 3f;
+    public float gravity = -9.81f;
+    public float jumpHeight = 1.5f;
 
-    void Start()
-    {
-        controller = GetComponent<CharacterController>();
-    }
+    [Header("Crouch Settings")]
+    public float standingHeight = 2f;
+    public float crouchingHeight = 1.2f;
+    public Vector3 standingCenter = new Vector3(0, 1f, 0);
+    public Vector3 crouchingCenter = new Vector3(0, 0.6f, 0);
+
+    Vector3 velocity;
+    bool isGrounded;
+    bool isCrouching;
 
     void Update()
     {
-        // --- Comprobar si está en el suelo ---
+        // --- Detección del suelo ---
         isGrounded = controller.isGrounded;
         if (isGrounded && velocity.y < 0)
+        {
             velocity.y = -2f;
+            animator.SetBool("isJumping", false);
+        }
 
-        // --- Movimiento horizontal ---
+        // --- Entrada de movimiento ---
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
         Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
-        // --- Detectar si está corriendo ---
-        isRunning = Input.GetKey(KeyCode.LeftShift);
-        float currentSpeed = isRunning ? runSpeed : walkSpeed;
+        // --- Correr / Caminar / Agacharse ---
+        bool wantsToRun = Input.GetKey(KeyCode.LeftShift);
+        bool wantsToCrouch = Input.GetKey(KeyCode.LeftControl);
 
+        // Si intenta correr mientras está agachado → se levanta
+        if (isCrouching && wantsToRun)
+        {
+            ToggleCrouch(false);
+        }
+
+        // Control manual del agachado
+        if (wantsToCrouch && isGrounded && !isCrouching)
+        {
+            ToggleCrouch(true);
+        }
+        else if (!wantsToCrouch && isCrouching)
+        {
+            ToggleCrouch(false);
+        }
+
+        // --- Determinar velocidad actual ---
+        float currentSpeed = isCrouching ? crouchSpeed : (wantsToRun ? runSpeed : walkSpeed);
+
+        // --- Movimiento y rotación ---
         if (direction.magnitude >= 0.1f)
         {
-            // Dirección según cámara
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            Quaternion rotation = Quaternion.Euler(0f, targetAngle, 0f);
+            transform.rotation = rotation;
 
-            // Movimiento del CharacterController
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDir.normalized * currentSpeed * Time.deltaTime);
 
-            // Rotar modelo Joe sin root motion
-            joeModel.rotation = Quaternion.Slerp(joeModel.rotation, Quaternion.Euler(0f, targetAngle, 0f), 10f * Time.deltaTime);
-
-            // Animaciones de caminar o correr
-            animator.SetFloat("Speed", currentSpeed);
-            animator.SetBool("isRunning", isRunning);
-            animator.SetBool("isJumping", false);
+            animator.SetBool("isWalking", !wantsToRun && !isCrouching && isGrounded);
+            animator.SetBool("isRunning", wantsToRun && !isCrouching && isGrounded);
+            animator.SetBool("isCrouching", isCrouching && isGrounded);
         }
         else
         {
-            animator.SetFloat("Speed", 0f);
+            animator.SetBool("isWalking", false);
+            animator.SetBool("isRunning", false);
+            animator.SetBool("isCrouching", isCrouching && isGrounded);
         }
 
-        // --- Saltar ---
-        if (Input.GetButtonDown("Jump"))
+        // --- Salto ---
+        if (Input.GetButtonDown("Jump") && isGrounded && !isCrouching)
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
             animator.SetBool("isJumping", true);
@@ -74,11 +92,29 @@ public class PlayerMovement : MonoBehaviour
         // --- Aplicar gravedad ---
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+    }
 
-        // --- Control de aterrizaje ---
-        if (isGrounded && animator.GetBool("isJumping"))
+    void ToggleCrouch(bool crouch)
+    {
+        isCrouching = crouch;
+        animator.SetBool("isCrouching", crouch);
+
+        if (crouch)
         {
-            animator.SetBool("isJumping", false);
+            // Reducir altura a la mitad (o al valor deseado)
+            float heightDiff = standingHeight - crouchingHeight;
+            controller.height = crouchingHeight;
+            controller.center = new Vector3(0, standingCenter.y - (heightDiff / 2f), 0);
+        }
+        else
+        {
+            // Volver a la altura original
+            float heightDiff = standingHeight - crouchingHeight;
+            controller.height = standingHeight;
+            controller.center = new Vector3(0, standingCenter.y, 0);
         }
     }
 }
+
+
+
