@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
-
+using System.Collections;  
 public class EnemyPatrol : MonoBehaviour
 {
     public Transform[] waypoints;
+    public Transform respawnPoint;
+    public Animator animator;
     public float walkSpeed = 2f;
     public float waitTime = 2f;
     int currentIndex = 0;
@@ -81,4 +83,31 @@ public class EnemyPatrol : MonoBehaviour
         Debug.Log("Jugador detectado → Cinemática + Reinicio");
         // Aquí después llamamos a la cinemática y reinicio
     }
+
+    private IEnumerator HandlePlayerDetected()
+    {
+        agent.isStopped = true; // Detener movimiento del enemigo
+
+        // Reproducir animación de detección si tienes una
+        if (animator != null)
+        {
+            animator.SetTrigger("Detected");
+        }
+
+        // Espera 0.5s antes de iniciar fade (más cinematográfico)
+        yield return new WaitForSeconds(0.5f);
+
+        // Llamar al generador del fade de pantalla
+        ScreenFader.Instance.FadeOut();
+
+        // Esperar el tiempo del fade
+        yield return new WaitForSeconds(1f);
+
+        // Reiniciar jugador
+        player.transform.position = respawnPoint.position;
+
+        // Opcional: reset del enemigo
+        agent.isStopped = false;
+    }
+
 }
