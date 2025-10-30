@@ -30,7 +30,19 @@ public class EnemyPatrol : MonoBehaviour
 
     void Update()
     {
+
+        //Código de animación
+        if (agent.velocity.magnitude > 0.1f)
+        {
+            animator.SetBool("isWalking", true);
+        }
+        else
+        {
+            animator.SetBool("isWalking", false);
+        }
+
         // Patrulla
+
         if (agent.isOnNavMesh)
         {
             if (!agent.pathPending && agent.remainingDistance < 0.5f)
@@ -48,7 +60,7 @@ public class EnemyPatrol : MonoBehaviour
         // Detección Visual
         if (CanSeePlayer())
         {
-            TriggerDetection();
+            TriggerDetection();            
         }
     }
 
@@ -88,11 +100,8 @@ public class EnemyPatrol : MonoBehaviour
     {
         agent.isStopped = true; // Detener movimiento del enemigo
 
-        // Reproducir animación de detección si tienes una
-        if (animator != null)
-        {
+        // Reproducir animación de detección si tienes una       
             animator.SetTrigger("Detected");
-        }
 
         // Espera 0.5s antes de iniciar fade (más cinematográfico)
         yield return new WaitForSeconds(0.5f);
