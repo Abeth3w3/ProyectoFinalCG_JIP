@@ -272,6 +272,8 @@ MonoBehaviour:
   target: {fileID: 1329469812}
   offset: {x: 0, y: 2, z: -4}
   smoothSpeed: 10
+  mouseSensitivity: 100
+  maxLookAngle: 80
 --- !u!1001 &200305825
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -546,18 +548,10 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: 675ace4db60e6104d80d06413699e335, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 454adf595b40d9242816da719c5bfdf7, type: 2}
+      objectReference: {fileID: 9100000, guid: 8c5b9dbfcfdf42646b065aec777c5ef3, type: 2}
     - target: {fileID: 5866666021909216657, guid: 675ace4db60e6104d80d06413699e335, type: 3}
       propertyPath: m_WarningMessage
-      value: "\nBinding warning: Some generic clip(s) animate transforms that are
-        already bound by a Humanoid avatar. These transforms can only be changed
-        by Humanoid clips.\n\tTransform 'mixamorig7:Hips'\n\tTransform 'mixamorig7:RightUpLeg'\n\tTransform
-        'mixamorig7:LeftHandRing1'\n\tTransform 'mixamorig7:RightHandRing1'\n\tTransform
-        'mixamorig7:RightHandThumb3'\n\tTransform 'mixamorig7:LeftHandIndex1'\n\tTransform
-        'mixamorig7:RightHandMiddle2'\n\tTransform 'mixamorig7:LeftFoot'\n\tTransform
-        'mixamorig7:LeftHandRing3'\n\tTransform 'mixamorig7:RightHandPinky1'\n\tand
-        more ...\n\tFrom animation clip 'Idle'\n\tFrom animation clip 'Walking'\n\tFrom
-        animation clip 'Jump'"
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -597,7 +591,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05378a92982deb3438d6b713d7ae1569, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  speed: 5
+  speed: 6
+  runSpeed: 9
   controller: {fileID: 1329469815}
   animator: {fileID: 1329469813}
 --- !u!143 &1329469815
