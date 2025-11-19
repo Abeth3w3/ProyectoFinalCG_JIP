@@ -19,10 +19,17 @@ public class PlayerMovement : MonoBehaviour
     private float rollTimer = 0f;
     private bool isRolling = false;
     private Vector3 rollDirection;
+    public bool isInvincible = false; // ← NUEVO: Para evitar daño durante roll
 
     [Header("Rotación")]
     public float turnSmoothTime = 0.2f;
     private float turnSmoothVelocity;
+
+    [Header("Mouse Look")] // ← NUEVA SECCIÓN
+    public float mouseSensitivity = 2f;
+    public float minVerticalAngle = -80f;
+    public float maxVerticalAngle = 80f;
+    private float verticalRotation = 0f;
 
     [Header("Ground Check")]
     public Transform GroundCheck;
@@ -35,10 +42,17 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
+
+        // ← NUEVO: Bloquear cursor
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
     {
+        // ← NUEVO: Rotación con mouse
+        HandleMouseLook();
+
         // --- Detección de suelo ---
         isGrounded = Physics.CheckSphere(GroundCheck.position, groundDistance, groundMask);
 
@@ -71,6 +85,22 @@ public class PlayerMovement : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 
+    // ← NUEVO MÉTODO: Rotación con mouse
+    void HandleMouseLook()
+    {
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+        // Rotación horizontal (jugador)
+        transform.Rotate(0, mouseX, 0);
+
+        // Rotación vertical (cámara)
+        verticalRotation -= mouseY;
+        verticalRotation = Mathf.Clamp(verticalRotation, minVerticalAngle, maxVerticalAngle);
+
+        cam.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
+    }
+
     void HandleMovement()
     {
         float horizontal = Input.GetAxisRaw("Horizontal");
@@ -84,11 +114,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (direction.magnitude >= 0.1f)
         {
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
-
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            // ← MODIFICADO: Ya no usa rotación suave porque ahora usamos mouse
+            Vector3 moveDir = transform.forward * vertical + transform.right * horizontal;
             controller.Move(moveDir.normalized * currentSpeed * Time.deltaTime);
 
             moveAmount = isRunning ? 1f : 0.5f;
@@ -98,12 +125,13 @@ public class PlayerMovement : MonoBehaviour
         animator.SetFloat("Blend", moveAmount);
         animator.SetBool("IsGrounded", isGrounded);
         animator.SetBool("IsJumping", !isGrounded);
-        animator.SetBool("IsRunning", isRolling);
+        animator.SetBool("IsRolling", isRolling);
     }
 
     void StartRoll()
     {
         isRolling = true;
+        isInvincible = true; // ← NUEVO: Invencibilidad durante roll
         rollTimer = rollDuration;
 
         // Determinar dirección del roll
@@ -114,8 +142,7 @@ public class PlayerMovement : MonoBehaviour
         {
             // Roll en dirección del movimiento
             Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
-            rollDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            rollDirection = transform.forward * vertical + transform.right * horizontal;
         }
         else
         {
@@ -123,20 +150,30 @@ public class PlayerMovement : MonoBehaviour
             rollDirection = transform.forward;
         }
 
+        rollDirection = rollDirection.normalized;
         animator.SetTrigger("Roll");
+
+        // ← NUEVO: Programar fin del roll
+        Invoke("EndRoll", rollDuration);
     }
 
     void HandleRoll()
     {
         rollTimer -= Time.deltaTime;
-
-        // Mover durante el roll
         controller.Move(rollDirection * rollSpeed * Time.deltaTime);
+    }
 
-        if (rollTimer <= 0f)
-        {
-            isRolling = false;
-        }
+    // ← NUEVO MÉTODO: Terminar roll
+    void EndRoll()
+    {
+        isRolling = false;
+        isInvincible = false;
+    }
+
+    // ← NUEVO MÉTODO: Para que otros scripts verifiquen invencibilidad
+    public bool IsInvincible()
+    {
+        return isInvincible;
     }
 
     private void OnDrawGizmosSelected()

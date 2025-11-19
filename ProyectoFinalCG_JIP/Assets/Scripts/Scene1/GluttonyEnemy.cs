@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 public class GluttonyEnemy : MonoBehaviour
 {
@@ -13,15 +11,35 @@ public class GluttonyEnemy : MonoBehaviour
     public Transform target;
     public bool attack;
 
+    [Header("Sistema de Salud")]
+    public int maxHealth = 50;
+    public int currentHealth;
+    public AudioClip deathSound;
+    public ParticleSystem deathParticles;
+
+    [Header("Ataque")]
+    public float attackDamage = 15f;
+    public float attackCooldown = 2f;
+    private float attackTimer = 0f;
+    public float attackRange = 2f;
+
     void Start()
     {
         animator = GetComponent<Animator>();
+        currentHealth = maxHealth;
     }
 
     public void Comportamiento_Enemigo()
     {
+        if (attackTimer > 0)
+        {
+            attackTimer -= Time.deltaTime;
+        }
+
+        float distanceToTarget = Vector3.Distance(transform.position, target.position);
+
         // Si está lejos del jugador (modo patrulla)
-        if (Vector3.Distance(transform.position, target.position) > 5)
+        if (distanceToTarget > 5)
         {
             animator.SetBool("run", false);
             cronometro += Time.deltaTime;
@@ -58,19 +76,98 @@ public class GluttonyEnemy : MonoBehaviour
             lookPos.y = 0;
 
             Quaternion rotation = Quaternion.LookRotation(lookPos);
-
-            // ERROR que tenías: escribiste "Transform.rotation"
             transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, 2f);
 
             animator.SetBool("walk", false);
-            animator.SetBool("run", true);
 
-            transform.Translate(Vector3.forward * 3f * Time.deltaTime);
+            // Solo correr si no está en rango de ataque
+            if (distanceToTarget > attackRange)
+            {
+                animator.SetBool("run", true);
+                transform.Translate(Vector3.forward * 3f * Time.deltaTime);
+            }
+            else
+            {
+                animator.SetBool("run", false);
+
+                // Atacar si está en rango
+                if (attackTimer <= 0)
+                {
+                    AttackPlayer();
+                }
+            }
         }
+    }
+
+    // Ataque al jugador
+    void AttackPlayer()
+    {
+        animator.SetTrigger("attack");
+        PlayerHealth playerHealth = target.GetComponent<PlayerHealth>();
+        if (playerHealth != null)
+        {
+            playerHealth.TakeDamage((int)attackDamage);
+        }
+
+        attackTimer = attackCooldown;
+        Debug.Log("👊 Enemigo ataca al jugador");
+    }
+
+    // Recibir daño (ESTE MÉTODO USA LA HAMBURGUESA)
+    public void TakeDamage(int damage)
+    {
+        currentHealth -= damage;
+        currentHealth = Mathf.Max(0, currentHealth);
+
+        Debug.Log($"🎯 Enemigo recibe {damage} daño. HP: {currentHealth}/{maxHealth}");
+
+        // Animación de daño
+        animator.SetTrigger("hit");
+
+        // Muerte
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    // Muerte del enemigo
+    void Die()
+    {
+        Debug.Log("☠️ Enemigo derrotado");
+
+        if (deathSound != null)
+            AudioSource.PlayClipAtPoint(deathSound, transform.position);
+
+        if (deathParticles != null)
+            Instantiate(deathParticles, transform.position, Quaternion.identity);
+
+        // Desactivar colisiones y script
+        GetComponent<Collider>().enabled = false;
+        this.enabled = false;
+
+        // Animación de muerte
+        animator.SetTrigger("die");
+
+        // Destruir después de un tiempo
+        Destroy(gameObject, 3f);
     }
 
     void Update()
     {
-        Comportamiento_Enemigo();
+        if (currentHealth > 0) // Solo ejecutar si está vivo
+        {
+            Comportamiento_Enemigo();
+        }
+    }
+
+    // Debug visual de rangos
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, 5f); // Rango de detección
     }
 }
