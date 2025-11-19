@@ -8,12 +8,34 @@ public class PlayerHealth : MonoBehaviour
     public Slider healthBar;
     public GameObject deathEffect;
 
+    [Header("Color Damage Effect")]
+    public bool enableColorChange = true;
+    public Color fullHealthColor = Color.white;
+    public Color lowHealthColor = Color.red;
+
     private int currentHealth;
+    private Renderer[] playerRenderers;
+    private Color[] originalColors;
 
     void Start()
     {
         currentHealth = maxHealth;
+
+        // Obtener todos los renderers del jugador
+        playerRenderers = GetComponentsInChildren<Renderer>();
+        originalColors = new Color[playerRenderers.Length];
+
+        // Guardar colores originales
+        for (int i = 0; i < playerRenderers.Length; i++)
+        {
+            if (playerRenderers[i].material.HasProperty("_Color"))
+            {
+                originalColors[i] = playerRenderers[i].material.color;
+            }
+        }
+
         UpdateHealthUI();
+        UpdateHealthColor();
     }
 
     public void TakeDamage(int damage)
@@ -21,11 +43,12 @@ public class PlayerHealth : MonoBehaviour
         currentHealth -= damage;
         Debug.Log($"Jugador recibió {damage} de daño. Vida: {currentHealth}");
 
-        // Efecto de daño
+        // Efecto de daño (flash rápido)
         StartCoroutine(DamageEffect());
 
-        // Actualizar UI
+        // Actualizar UI y color
         UpdateHealthUI();
+        UpdateHealthColor();
 
         if (currentHealth <= 0)
         {
@@ -36,29 +59,18 @@ public class PlayerHealth : MonoBehaviour
     System.Collections.IEnumerator DamageEffect()
     {
         // Efecto visual de parpadeo
-        Renderer[] renderers = GetComponentsInChildren<Renderer>();
-        Color[] originalColors = new Color[renderers.Length];
-
-        // Guardar colores originales
-        for (int i = 0; i < renderers.Length; i++)
+        foreach (Renderer renderer in playerRenderers)
         {
-            if (renderers[i].material.HasProperty("_Color"))
+            if (renderer.material.HasProperty("_Color"))
             {
-                originalColors[i] = renderers[i].material.color;
-                renderers[i].material.color = Color.red;
+                renderer.material.color = Color.white; // Flash blanco
             }
         }
 
         yield return new WaitForSeconds(0.1f);
 
-        // Restaurar colores
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            if (renderers[i].material.HasProperty("_Color"))
-            {
-                renderers[i].material.color = originalColors[i];
-            }
-        }
+        // Volver al color según salud actual
+        UpdateHealthColor();
     }
 
     void UpdateHealthUI()
@@ -66,6 +78,24 @@ public class PlayerHealth : MonoBehaviour
         if (healthBar != null)
         {
             healthBar.value = (float)currentHealth / maxHealth;
+        }
+    }
+
+    void UpdateHealthColor()
+    {
+        if (!enableColorChange) return;
+
+        // Calcular progreso del color (0 = salud llena, 1 = sin salud)
+        float healthPercent = (float)currentHealth / maxHealth;
+        Color targetColor = Color.Lerp(lowHealthColor, fullHealthColor, healthPercent);
+
+        // Aplicar color a todos los renderers
+        for (int i = 0; i < playerRenderers.Length; i++)
+        {
+            if (playerRenderers[i].material.HasProperty("_Color"))
+            {
+                playerRenderers[i].material.color = targetColor;
+            }
         }
     }
 
@@ -79,10 +109,6 @@ public class PlayerHealth : MonoBehaviour
             Instantiate(deathEffect, transform.position, Quaternion.identity);
         }
 
-        // Aquí puedes agregar lógica de respawn o game over
-        // Por ejemplo:
-        // GameManager.Instance.GameOver();
-
         // Desactivar jugador temporalmente
         gameObject.SetActive(false);
     }
@@ -91,6 +117,7 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
         UpdateHealthUI();
+        UpdateHealthColor(); // Actualizar color al curar
         Debug.Log($"Jugador curado. Vida: {currentHealth}");
     }
 

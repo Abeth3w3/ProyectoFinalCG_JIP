@@ -91,4 +91,10 @@ public class EnemyHealth : MonoBehaviour
 
         Destroy(gameObject);
     }
+
+    // AÑADIR ESTE MÉTODO PARA OBTENER LA SALUD ACTUAL
+    public int GetCurrentHealth()
+    {
+        return currentHealth;
+    }
 }
