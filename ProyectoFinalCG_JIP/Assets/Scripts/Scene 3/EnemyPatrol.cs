@@ -1,122 +1,168 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
-using System.Collections;  
+
 public class EnemyPatrol : MonoBehaviour
 {
-    public Transform[] waypoints;
-    public Transform respawnPoint;
-    public Animator animator;
-    public float walkSpeed = 2f;
-    public float waitTime = 2f;
-    int currentIndex = 0;
-    float waitCounter;
+    [Header("Patrol")]
+    public Transform[] points;
+    public float waitTimeAtPoint = 2f;
 
-    [Header("Detection Settings")]
-    public Transform visionPivot;
-    public float viewDistance = 8f;
-    public float viewAngle = 60f;
-
+    [Header("Detection")]
+    public float detectionRange = 6f;
     public Transform player;
 
+    [Header("Animator")]
+    public Animator animator;
+
     NavMeshAgent agent;
+    int destPoint = 0;
+    bool isWaiting = false;
+    float waitTimer = 0f;
+    bool playerDetected = false;
+
+    void Awake()
+    {
+        agent = GetComponent<NavMeshAgent>();
+        if (agent == null) Debug.LogError("Missing NavMeshAgent on " + name);
+    }
 
     void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
-        agent.speed = walkSpeed;
-        agent.autoBraking = false;
+        if (points == null || points.Length == 0)
+        {
+            Debug.LogWarning("No patrol points assigned on " + name);
+            enabled = false;
+            return;
+        }
+
+        if (player == null)
+        {
+            var p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) player = p.transform;
+        }
+
+        // ensure agent is active
+        agent.isStopped = false;
+        agent.enabled = true;
+
+        // start patrol
         GoToNextPoint();
     }
 
     void Update()
     {
-
-        //Código de animación
-        if (agent.velocity.magnitude > 0.1f)
+        // Safety: if agent not on NavMesh don't proceed
+        if (!agent.isOnNavMesh)
         {
-            animator.SetBool("isWalking", true);
-        }
-        else
-        {
-            animator.SetBool("isWalking", false);
+            // try to re-place on nearest position (optional) or warn
+            if (!agent.isOnNavMesh) Debug.LogWarning(name + " not on NavMesh.");
+            return;
         }
 
-        // Patrulla
+        DetectPlayer(); // updates playerDetected
 
-        if (agent.isOnNavMesh)
+        if (playerDetected)
         {
-            if (!agent.pathPending && agent.remainingDistance < 0.5f)
+            // stop movement and set animation           
+            UpdateAnimatorState(idle: false, walk: false, detected: true);
+            return;
+        }
+
+        // if agent is stopped for other reason, resume
+        if (agent.isStopped)
+            agent.isStopped = false;
+
+        // If we reached destination, begin waiting
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        {
+            if (!isWaiting)
             {
-                waitCounter += Time.deltaTime;
-                if (waitCounter >= waitTime)
+                isWaiting = true;
+                waitTimer = 0f;
+                UpdateAnimatorState(idle: true, walk: false, detected: false);
+            }
+            else
+            {
+                waitTimer += Time.deltaTime;
+                if (waitTimer >= waitTimeAtPoint)
                 {
+                    isWaiting = false;
                     GoToNextPoint();
-                    waitCounter = 0f;
                 }
             }
         }
-
-
-        // Detección Visual
-        if (CanSeePlayer())
+        else
         {
-            TriggerDetection();            
+            // moving
+            UpdateAnimatorState(idle: false, walk: true, detected: false);
         }
     }
 
     void GoToNextPoint()
     {
-        if (waypoints.Length == 0) return;
-        agent.destination = waypoints[currentIndex].position;
-        currentIndex = (currentIndex + 1) % waypoints.Length;
+        if (points.Length == 0) return;
+
+        if (!agent.isOnNavMesh)
+        {
+            Debug.LogWarning(name + " GoToNextPoint called but agent not on NavMesh.");
+            return;
+        }
+
+        agent.destination = points[destPoint].position;
+        destPoint = (destPoint + 1) % points.Length;
+        isWaiting = false;
+        waitTimer = 0f;
+        UpdateAnimatorState(idle: false, walk: true, detected: false);
+        // debug
+        Debug.Log(name + " -> Moving to " + agent.destination);
     }
 
-    bool CanSeePlayer()
+    void DetectPlayer()
     {
-        Vector3 dir = (player.position - visionPivot.position).normalized;
-        float angle = Vector3.Angle(visionPivot.forward, dir);
+        if (player == null) return;
 
-        if (angle < viewAngle / 2f)
+        float dist = Vector3.Distance(transform.position, player.position);
+        bool inRange = dist <= detectionRange;
+
+        if (inRange && !playerDetected)
         {
-            if (Vector3.Distance(visionPivot.position, player.position) <= viewDistance)
-            {
-                // Línea de visión sin obstáculos
-                if (!Physics.Linecast(visionPivot.position, player.position))
-                {
-                    return true;
-                }
-            }
+            playerDetected = true;
+            Debug.Log(name + " detected player (range).");
         }
+        else if (!inRange && playerDetected)
+        {
+            playerDetected = false;
+            Debug.Log(name + " lost sight of player (range).");
+        }
+    }
+
+    void UpdateAnimatorState(bool idle, bool walk, bool detected)
+    {
+        if (animator == null) return;
+
+        // These parameter names must match exactly your Animator
+        if (animator.HasParameterOfType("Idle", AnimatorControllerParameterType.Bool))
+            animator.SetBool("Idle", idle);
+        if (animator.HasParameterOfType("Walk", AnimatorControllerParameterType.Bool))
+            animator.SetBool("Walk", walk);
+        if (animator.HasParameterOfType("Detected", AnimatorControllerParameterType.Bool))
+            animator.SetBool("Detected", detected);
+        else if (detected)
+        {
+            // if Detected is a trigger instead of bool:
+            if (animator.HasParameterOfType("Detected", AnimatorControllerParameterType.Trigger))
+                animator.SetTrigger("Detected");
+        }
+    }
+}
+
+// Helper extension to test for parameter existence (keeps code safe)
+public static class AnimatorExtensions
+{
+    public static bool HasParameterOfType(this Animator animator, string name, AnimatorControllerParameterType type)
+    {
+        foreach (var p in animator.parameters)
+            if (p.name == name && p.type == type) return true;
         return false;
     }
-
-    void TriggerDetection()
-    {
-        Debug.Log("Jugador detectado → Cinemática + Reinicio");
-        // Aquí después llamamos a la cinemática y reinicio
-    }
-
-    private IEnumerator HandlePlayerDetected()
-    {
-        agent.isStopped = true; // Detener movimiento del enemigo
-
-        // Reproducir animación de detección si tienes una       
-            animator.SetTrigger("Detected");
-
-        // Espera 0.5s antes de iniciar fade (más cinematográfico)
-        yield return new WaitForSeconds(0.5f);
-
-        // Llamar al generador del fade de pantalla
-        ScreenFader.Instance.FadeOut();
-
-        // Esperar el tiempo del fade
-        yield return new WaitForSeconds(1f);
-
-        // Reiniciar jugador
-        player.transform.position = respawnPoint.position;
-
-        // Opcional: reset del enemigo
-        agent.isStopped = false;
-    }
-
 }
