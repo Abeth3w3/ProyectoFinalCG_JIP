@@ -109,7 +109,13 @@ public class PlayerHealth : MonoBehaviour
             Instantiate(deathEffect, transform.position, Quaternion.identity);
         }
 
-        // Desactivar jugador temporalmente
+        // Notificar al GameManager
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PlayerDied();
+        }
+
+        // Desactivar jugador
         gameObject.SetActive(false);
     }
 

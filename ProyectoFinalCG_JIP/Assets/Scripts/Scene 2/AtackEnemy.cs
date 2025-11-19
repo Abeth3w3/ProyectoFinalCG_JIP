@@ -8,6 +8,7 @@ public class BossSimpleAI : MonoBehaviour
     public float speedBurstMultiplier = 1.8f; // Multiplicador durante las ráfagas
     public float chaseRange = 15f;
     public float minDistanceToPlayer = 2f;
+    public float attackRange = 2f; // Nuevo: rango para atacar
 
     [Header("Damage Settings")]
     public int meleeDamage = 20;
@@ -68,6 +69,12 @@ public class BossSimpleAI : MonoBehaviour
             if (phase2Activated)
             {
                 HandleSpeedBursts();
+            }
+
+            // Ataque por proximidad
+            if (distanceToPlayer <= attackRange && Time.time >= lastDamageTime + damageCooldown)
+            {
+                DealDamage();
             }
         }
     }
@@ -155,28 +162,11 @@ public class BossSimpleAI : MonoBehaviour
         }
     }
 
-    // Detectar colisiones con el jugador
-    void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Player") && Time.time >= lastDamageTime + damageCooldown)
-        {
-            DealDamage(collision.gameObject);
-        }
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player") && Time.time >= lastDamageTime + damageCooldown)
-        {
-            DealDamage(other.gameObject);
-        }
-    }
-
-    void DealDamage(GameObject playerObject)
+    void DealDamage()
     {
         lastDamageTime = Time.time;
 
-        PlayerHealth playerHealth = playerObject.GetComponent<PlayerHealth>();
+        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
         if (playerHealth != null)
         {
             playerHealth.TakeDamage(meleeDamage);
@@ -185,14 +175,31 @@ public class BossSimpleAI : MonoBehaviour
             // Empujar al jugador si está en ráfaga de velocidad
             if (isSpeedBurstActive)
             {
-                Rigidbody playerRb = playerObject.GetComponent<Rigidbody>();
+                Rigidbody playerRb = player.GetComponent<Rigidbody>();
                 if (playerRb != null)
                 {
-                    Vector3 pushDirection = (playerObject.transform.position - transform.position).normalized;
+                    Vector3 pushDirection = (player.transform.position - transform.position).normalized;
                     playerRb.AddForce(pushDirection * 12f, ForceMode.Impulse);
                     Debug.Log("¡Empujón extra por ráfaga de velocidad!");
                 }
             }
+        }
+    }
+
+    // También mantener las colisiones por si acaso
+    void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player") && Time.time >= lastDamageTime + damageCooldown)
+        {
+            DealDamage();
+        }
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player") && Time.time >= lastDamageTime + damageCooldown)
+        {
+            DealDamage();
         }
     }
 
@@ -205,6 +212,10 @@ public class BossSimpleAI : MonoBehaviour
         // Visualizar distancia mínima
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, minDistanceToPlayer);
+
+        // Visualizar rango de ataque
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
 
         // Visualizar estado de ráfaga de velocidad
         if (isSpeedBurstActive)

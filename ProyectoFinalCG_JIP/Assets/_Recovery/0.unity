@@ -893,7 +893,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 644475983}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e30f29c9dd9771745b2ec18c2a465e80, type: 3}
   m_Name: 
@@ -955,7 +955,7 @@ MonoBehaviour:
   chaseRange: 15
   minDistanceToPlayer: 2
   attackRange: 2
-  meleeDamage: 6
+  meleeDamage: 20
   damageCooldown: 1
   minBurstInterval: 3
   maxBurstInterval: 7
@@ -1032,28 +1032,6 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &644475992
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 644475983}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7eaebd6d6d589f046888cb4e46af31ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BossSimpleAI
-  normalSpeed: 2
-  speedBurstMultiplier: 1.8
-  chaseRange: 15
-  minDistanceToPlayer: 2
-  attackRange: 2
-  meleeDamage: 10
-  damageCooldown: 2
-  minBurstInterval: 3
-  maxBurstInterval: 7
-  burstDuration: 1.2
 --- !u!1 &673843407
 GameObject:
   m_ObjectHideFlags: 0
@@ -6716,9 +6694,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1639818050706832, guid: 28fce92923d67c2449f9c3d295c70aef, type: 3}
       insertIndex: -1
       addedObject: {fileID: 644475990}
-    - targetCorrespondingSourceObject: {fileID: 1639818050706832, guid: 28fce92923d67c2449f9c3d295c70aef, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 644475992}
   m_SourcePrefab: {fileID: 100100000, guid: 28fce92923d67c2449f9c3d295c70aef, type: 3}
 --- !u!1 &1329469811 stripped
 GameObject:

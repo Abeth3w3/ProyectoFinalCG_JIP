@@ -11,6 +11,11 @@ public class EnemyHealth : MonoBehaviour
     public float flashDuration = 0.2f;
     public Color flashColor = Color.red;
 
+    [Header("Color Damage System")]
+    public bool enableColorChange = true;
+    public Color fullHealthColor = Color.white;
+    public Color lowHealthColor = Color.red;
+
     private int currentHealth;
     private Renderer[] enemyRenderers;
     private Color[] originalColors;
@@ -32,6 +37,8 @@ public class EnemyHealth : MonoBehaviour
                 originalColors[i] = enemyRenderers[i].material.color;
             }
         }
+
+        UpdateHealthColor();
     }
 
     public void TakeDamage(int damage)
@@ -45,6 +52,9 @@ public class EnemyHealth : MonoBehaviour
             StartCoroutine(DamageFlash());
         }
 
+        // Actualizar color según salud
+        UpdateHealthColor();
+
         if (currentHealth <= 0)
         {
             Die();
@@ -55,11 +65,13 @@ public class EnemyHealth : MonoBehaviour
     {
         isFlashing = true;
 
-        // Cambiar a color de flash
+        // Guardar color actual antes del flash
+        Color[] currentColors = new Color[enemyRenderers.Length];
         for (int i = 0; i < enemyRenderers.Length; i++)
         {
             if (enemyRenderers[i].material != null)
             {
+                currentColors[i] = enemyRenderers[i].material.color;
                 enemyRenderers[i].material.color = flashColor;
             }
         }
@@ -67,16 +79,28 @@ public class EnemyHealth : MonoBehaviour
         // Esperar
         yield return new WaitForSeconds(flashDuration);
 
-        // Volver a los colores originales
+        // Volver a los colores según salud actual
+        UpdateHealthColor();
+
+        isFlashing = false;
+    }
+
+    void UpdateHealthColor()
+    {
+        if (!enableColorChange) return;
+
+        // Calcular progreso del color (0 = salud llena, 1 = sin salud)
+        float healthPercent = (float)currentHealth / maxHealth;
+        Color targetColor = Color.Lerp(lowHealthColor, fullHealthColor, healthPercent);
+
+        // Aplicar color a todos los renderers
         for (int i = 0; i < enemyRenderers.Length; i++)
         {
             if (enemyRenderers[i].material != null)
             {
-                enemyRenderers[i].material.color = originalColors[i];
+                enemyRenderers[i].material.color = targetColor;
             }
         }
-
-        isFlashing = false;
     }
 
     void Die()
@@ -89,10 +113,16 @@ public class EnemyHealth : MonoBehaviour
             Instantiate(deathEffect, transform.position, Quaternion.identity);
         }
 
+        // Si es el boss, notificar al GameManager
+        if (gameObject.CompareTag("Boss") && GameManager.Instance != null)
+        {
+            GameManager.Instance.BossDefeated();
+        }
+
         Destroy(gameObject);
     }
 
-    // AÑADIR ESTE MÉTODO PARA OBTENER LA SALUD ACTUAL
+    // MÉTODO NUEVO QUE FALTABA - Esto soluciona el error
     public int GetCurrentHealth()
     {
         return currentHealth;

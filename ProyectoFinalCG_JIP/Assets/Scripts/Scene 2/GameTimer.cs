@@ -1,36 +1,92 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class GameTimer : MonoBehaviour
 {
-    public float timeElapsed = 0f;
-    public int finalScore = 0;
-    public bool isCounting = true;
+    [Header("Timer Settings")]
+    public TextMeshProUGUI timerText;
+    public float gameTime = 60f;
 
-    public TextMeshProUGUI scoreText;
+    [Header("Tutorial Settings")]
+    public float tutorialDuration = 5f;
+
+    private float currentTime;
+    private bool timerStarted = false;
+    private bool gameActive = true;
+
+    void Start()
+    {
+        currentTime = gameTime;
+        UpdateTimerDisplay();
+
+        // No iniciar el timer inmediatamente
+        timerStarted = false;
+
+        // Esperar el tiempo del tutorial y luego empezar
+        StartCoroutine(StartAfterTutorial());
+    }
+
+    IEnumerator StartAfterTutorial()
+    {
+        Debug.Log("Esperando que termine el tutorial...");
+
+        // Esperar exactamente el tiempo que dura tu mensaje tutorial
+        yield return new WaitForSeconds(tutorialDuration);
+
+        // Ahora iniciar el timer del juego
+        StartTimer();
+    }
 
     void Update()
     {
-        if (isCounting)
+        if (timerStarted && gameActive)
         {
-            timeElapsed += Time.deltaTime;
-            scoreText.text = "Tiempo: " + timeElapsed.ToString("F1") + "  - Puntos: " + finalScore;
+            currentTime -= Time.deltaTime;
+            UpdateTimerDisplay();
+
+            if (currentTime <= 0f)
+            {
+                currentTime = 0f;
+                gameActive = false;
+                timerStarted = false;
+                GameOver();
+            }
         }
     }
 
-    public void StopAndCalculateScore()
+    void StartTimer()
     {
-        isCounting = false;
+        timerStarted = true;
+        Debug.Log("¡Timer del juego iniciado!");
+    }
 
-        if (timeElapsed <= 10f)
-            finalScore = 100;
-        else if (timeElapsed <= 20f)
-            finalScore = 70;
-        else if (timeElapsed <= 30f)
-            finalScore = 50;
-        else
-            finalScore = 20; // por si se demora más
+    void UpdateTimerDisplay()
+    {
+        if (timerText != null)
+        {
+            int seconds = Mathf.CeilToInt(currentTime);
+            timerText.text = "Tiempo: " + seconds.ToString();
+        }
+    }
 
-        scoreText.text = "Tiempo: " + timeElapsed.ToString("F1") + "  - Puntos: " + finalScore;
+    void GameOver()
+    {
+        Debug.Log("¡Fin del juego por tiempo!");
+    }
+
+    // MÉTODO NUEVO - Para que GameManager pueda obtener el tiempo actual
+    public float GetCurrentTime()
+    {
+        return currentTime;
+    }
+
+    // Para agregar tiempo extra
+    public void AddTime(float extraTime)
+    {
+        if (gameActive)
+        {
+            currentTime += extraTime;
+        }
     }
 }

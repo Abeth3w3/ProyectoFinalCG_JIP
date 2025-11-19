@@ -2,29 +2,32 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 
-public class TutorialMessage : MonoBehaviour
+public class StartMessage : MonoBehaviour
 {
-    [Header("ConfiguraciÛn del Mensaje")]
-    public GameObject messagePanel; // Arrastra el panel aquÌ desde el inspector
-    public TextMeshProUGUI messageText; // Arrastra el TextMeshPro UGUI aquÌ
-    public string message = "Debes recoger la manzana que hay en el mapa y no olvides usar E para recoger la espada, lo necesitar·s";
-    public float displayTime = 5f; // Tiempo en segundos que se muestra el mensaje
+    [Header("Configuraci√≥n del Mensaje")]
+    public GameObject messagePanel;
+    public TextMeshProUGUI messageText;
+    public string message = "Debes recoger la manzana que hay en el mapa y no olvides usar E para recoger la espada, lo necesitar√°s";
+    public float displayTime = 5f;
+
+    // Evento est√°tico para cuando el mensaje termina
+    public static System.Action OnMessageEnd;
 
     void Start()
     {
-        // Asegurarse de que el panel estÈ desactivado al inicio
+        // Asegurarse de que el panel est√© desactivado al inicio
         if (messagePanel != null)
         {
             messagePanel.SetActive(false);
         }
 
-        // Iniciar la corutina para mostrar el mensaje
+        // Iniciar la corrutina para mostrar el mensaje
         StartCoroutine(ShowTutorialMessage());
     }
 
     IEnumerator ShowTutorialMessage()
     {
-        // Esperar un frame para asegurarse de que todo est· inicializado
+        // Esperar un frame
         yield return null;
 
         // Activar el panel y asignar el texto
@@ -46,31 +49,8 @@ public class TutorialMessage : MonoBehaviour
         {
             messagePanel.SetActive(false);
         }
-    }
 
-    // Opcional: FunciÛn para mostrar el mensaje manualmente
-    public void ShowMessage(string customMessage = "", float customTime = 0f)
-    {
-        StartCoroutine(ShowCustomMessage(customMessage, customTime));
-    }
-
-    IEnumerator ShowCustomMessage(string customMessage, float customTime)
-    {
-        if (messagePanel != null)
-        {
-            messagePanel.SetActive(true);
-        }
-
-        if (messageText != null)
-        {
-            messageText.text = string.IsNullOrEmpty(customMessage) ? message : customMessage;
-        }
-
-        yield return new WaitForSeconds(customTime > 0 ? customTime : displayTime);
-
-        if (messagePanel != null)
-        {
-            messagePanel.SetActive(false);
-        }
+        // Notificar que el mensaje termin√≥
+        OnMessageEnd?.Invoke();
     }
 }
