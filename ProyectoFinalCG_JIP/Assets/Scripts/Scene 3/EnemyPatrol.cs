@@ -19,6 +19,9 @@ public class EnemyPatrol : MonoBehaviour
     bool isWaiting = false;
     float waitTimer = 0f;
     bool playerDetected = false;
+    public CameraZoomOnDetection cameraZoom;
+
+
 
     void Awake()
     {
@@ -66,6 +69,7 @@ public class EnemyPatrol : MonoBehaviour
             // stop movement and set animation           
             UpdateAnimatorState(idle: false, walk: false, detected: true);
             return;
+
         }
 
         // if agent is stopped for other reason, resume
@@ -128,12 +132,20 @@ public class EnemyPatrol : MonoBehaviour
         {
             playerDetected = true;
             Debug.Log(name + " detected player (range).");
+
+            if (cameraZoom != null)
+                cameraZoom.ZoomIn();
         }
         else if (!inRange && playerDetected)
         {
             playerDetected = false;
             Debug.Log(name + " lost sight of player (range).");
+
+            if (cameraZoom != null)
+                cameraZoom.ZoomOut();
         }
+
+
     }
 
     void UpdateAnimatorState(bool idle, bool walk, bool detected)
@@ -165,4 +177,6 @@ public static class AnimatorExtensions
             if (p.name == name && p.type == type) return true;
         return false;
     }
+    
 }
+
