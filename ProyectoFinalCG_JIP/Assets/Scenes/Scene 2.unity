@@ -715,11 +715,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4411128782263238, guid: 426b44a7575f71e479fab4f4e8431989, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 46.52
+      value: 46.26
       objectReference: {fileID: 0}
     - target: {fileID: 4411128782263238, guid: 426b44a7575f71e479fab4f4e8431989, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 165.23
+      value: 166.31
       objectReference: {fileID: 0}
     - target: {fileID: 4411128782263238, guid: 426b44a7575f71e479fab4f4e8431989, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1699,6 +1699,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8094233446992353698, guid: c814a1ff3b5a8c14686e8b7eee853b5e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2136465325}
+    - targetCorrespondingSourceObject: {fileID: 8094233446992353698, guid: c814a1ff3b5a8c14686e8b7eee853b5e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2136465326}
   m_SourcePrefab: {fileID: 100100000, guid: c814a1ff3b5a8c14686e8b7eee853b5e, type: 3}
 --- !u!1 &2136465317 stripped
 GameObject:
@@ -1718,8 +1721,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 50
-  deathEffect: {fileID: 0}
-  flashDuration: 0.3
+  currentHealth: 0
+  deathSound: {fileID: 0}
+  deathParticles: {fileID: 0}
+  attackDamage: 15
+  attackCooldown: 2
+  attackRange: 2
+  detectionRange: 8
+  visionAngle: 120
+  moveSpeed: 3
+  pointValue: 100
+  nextSceneName: Scene 3
+  sceneChangeDelay: 3
 --- !u!114 &2136465320
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1822,6 +1835,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDamageFinal2
   damage: 10
   cooldown: 0.5
+--- !u!114 &2136465326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2136465317}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cbd6e974a059994ebd5992650e2f323, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealthFinal
+  maxHealth: 50
+  currentHealth: 0
+  playerRenderer: {fileID: 0}
+  gameOverUI: {fileID: 0}
+  restartOnDeath: 1
+  restartDelay: 3
+  isDead: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

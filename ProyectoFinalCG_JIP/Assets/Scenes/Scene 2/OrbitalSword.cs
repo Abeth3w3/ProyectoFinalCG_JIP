@@ -90,8 +90,8 @@ public class OrbitalSword : MonoBehaviour
     {
         lastAttackTime = Time.time;
 
-        // Aplicar daño al enemigo - CORREGIDO: usa PlayerHealthFinal
-        PlayerHealthFinal enemyHealth = enemy.GetComponent<PlayerHealthFinal>();
+        // CORREGIDO: Buscar SimpleEnemy en lugar de PlayerHealthFinal
+        SimpleEnemy enemyHealth = enemy.GetComponent<SimpleEnemy>();
         if (enemyHealth != null && !enemyHealth.isDead)
         {
             enemyHealth.TakeDamage(damage);
@@ -102,7 +102,7 @@ public class OrbitalSword : MonoBehaviour
         }
         else
         {
-            Debug.Log("Enemigo no tiene PlayerHealthFinal o está muerto");
+            Debug.Log("Enemigo no tiene componente SimpleEnemy o está muerto");
         }
     }
 

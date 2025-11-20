@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -8,10 +8,19 @@ public class GameDataManager : MonoBehaviour
 {
     public static GameDataManager Instance;
 
+    [Header("Level System Configuration")]
+    public string[] levelNames = { "Scene1", "Scene2", "Scene3" };
+    public float levelTransitionDelay = 3f;
+
     private GameData gameData;
     private string savePath;
     private float levelStartTime;
     private string currentLevelName;
+    private int currentLevelIndex = 0;
+    private bool levelCompleted = false;
+
+    // Lista de enemigos en la escena actual
+    private List<GameObject> currentEnemies = new List<GameObject>();
 
     void Awake()
     {
@@ -51,15 +60,118 @@ public class GameDataManager : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (gameData != null && !string.IsNullOrEmpty(currentLevelName))
+        // Guardar tiempo del nivel anterior
+        if (gameData != null && !string.IsNullOrEmpty(currentLevelName) && currentLevelName != scene.name)
         {
             SaveLevelTime(currentLevelName, Time.time - levelStartTime);
         }
 
+        // Reiniciar para nuevo nivel
         levelStartTime = Time.time;
         currentLevelName = scene.name;
         gameData.currentLevel = currentLevelName;
+
+        // Reiniciar estado del nivel
+        levelCompleted = false;
+        currentEnemies.Clear();
+
+        // Buscar y registrar todos los enemigos en la escena
+        RegisterAllEnemiesInScene();
+
+        Debug.Log($"🎮 Nivel '{currentLevelName}' iniciado. Enemigos: {currentEnemies.Count}");
     }
+
+    void RegisterAllEnemiesInScene()
+    {
+        // Buscar enemigos por tag
+        GameObject[] enemyObjects = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject enemy in enemyObjects)
+        {
+            RegisterEnemy(enemy);
+        }
+
+        // También podemos buscar por componentes específicos por si acaso
+        GluttonyEnemy[] gluttonyEnemies = FindObjectsOfType<GluttonyEnemy>();
+        foreach (GluttonyEnemy enemy in gluttonyEnemies)
+        {
+            if (!currentEnemies.Contains(enemy.gameObject))
+            {
+                RegisterEnemy(enemy.gameObject);
+            }
+        }
+
+        SimpleEnemy[] simpleEnemies = FindObjectsOfType<SimpleEnemy>();
+        foreach (SimpleEnemy enemy in simpleEnemies)
+        {
+            if (!currentEnemies.Contains(enemy.gameObject))
+            {
+                RegisterEnemy(enemy.gameObject);
+            }
+        }
+    }
+
+    public void RegisterEnemy(GameObject enemy)
+    {
+        if (!currentEnemies.Contains(enemy))
+        {
+            currentEnemies.Add(enemy);
+        }
+    }
+
+    public void OnEnemyKilled(GameObject enemy, int points = 100)
+    {
+        // Remover el enemigo de la lista
+        if (currentEnemies.Contains(enemy))
+        {
+            currentEnemies.Remove(enemy);
+        }
+
+        // Actualizar datos
+        AddEnemyKill();
+        AddScore(points);
+
+        Debug.Log($"⚔️ Enemigo eliminado! Puntos: {points} | Enemigos restantes: {currentEnemies.Count}");
+
+        // Verificar si no quedan enemigos
+        if (currentEnemies.Count == 0 && !levelCompleted)
+        {
+            CompleteLevel();
+        }
+    }
+
+    void CompleteLevel()
+    {
+        levelCompleted = true;
+        float levelTime = Time.time - levelStartTime;
+
+        Debug.Log($"✅ ¡Nivel {currentLevelName} completado! Tiempo: {levelTime:F1}s");
+
+        // Bonus por completar nivel
+        AddScore(500); // Bonus fijo por completar el nivel
+        CompleteLevelRecord();
+
+        // Cambiar al siguiente nivel después del delay
+        Invoke("LoadNextLevel", levelTransitionDelay);
+    }
+
+    void LoadNextLevel()
+    {
+        currentLevelIndex++;
+
+        if (currentLevelIndex < levelNames.Length)
+        {
+            string nextLevel = levelNames[currentLevelIndex];
+            Debug.Log($"🔄 Cargando siguiente nivel: {nextLevel}");
+            SceneManager.LoadScene(nextLevel);
+        }
+        else
+        {
+            Debug.Log("🎊 ¡JUEGO COMPLETADO! Todos los niveles terminados.");
+            // Aquí puedes cargar una escena de final de juego
+        }
+    }
+
+    // ... (el resto de métodos de guardado y carga se mantienen igual)
 
     public void SaveGame()
     {
@@ -168,7 +280,7 @@ public class GameDataManager : MonoBehaviour
         SaveGame();
     }
 
-    public void CompleteLevel()
+    public void CompleteLevelRecord()
     {
         gameData.levelsCompleted++;
         SaveGame();

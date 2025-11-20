@@ -1963,7 +1963,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemSpawner
   spawnableItems:
   - itemPrefab: {fileID: 7554704284473863403, guid: cac36beadbe0f944bbb46a9a9b530be9, type: 3}
-    spawnWeight: 5
+    spawnWeight: 10
   - itemPrefab: {fileID: 263988959124290487, guid: 55baaa1caf4b5384090e07fceb78b747, type: 3}
     spawnWeight: 5
   maxItems: 20
