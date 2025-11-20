@@ -19,7 +19,7 @@ public class EnemyPatrol : MonoBehaviour
     bool isWaiting = false;
     float waitTimer = 0f;
     bool playerDetected = false;
-    public CameraZoomOnDetection cameraZoom;
+    
 
 
 
@@ -133,17 +133,9 @@ public class EnemyPatrol : MonoBehaviour
             playerDetected = true;
             Debug.Log(name + " detected player (range).");
 
-            if (cameraZoom != null)
-                cameraZoom.ZoomIn();
+           
         }
-        else if (!inRange && playerDetected)
-        {
-            playerDetected = false;
-            Debug.Log(name + " lost sight of player (range).");
-
-            if (cameraZoom != null)
-                cameraZoom.ZoomOut();
-        }
+        
 
 
     }

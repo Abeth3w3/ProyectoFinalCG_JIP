@@ -67,45 +67,42 @@ namespace SunTemple
 
 
 
-		void Update()
-		{
-			if (scriptIsEnabled) {
-				if (Rotating) {
-					Rotate ();
-				}
+        void Update()
+        {
+            if (!scriptIsEnabled)
+                return;
 
-				if (Input.GetKeyDown (KeyCode.Mouse0)) {
-					TryToOpen ();
-				}
+            if (Rotating)
+                Rotate();
 
-
-				if (cursor != null) {
-					CursorHint ();
-				}
-			}
-
-		} 
+            TryToOpen(); // SE EJECUTA SIEMPRE
+        }
 
 
 
 
-		void TryToOpen(){
-			if (Mathf.Abs(Vector3.Distance(transform.position, Player.transform.position)) <= MaxDistance){	
 
-				Ray ray = Cam.ScreenPointToRay (new Vector3 (Screen.width / 2, Screen.height / 2, 0));
-				RaycastHit hit;
-											
-				if (DoorCollider.Raycast(ray, out hit, MaxDistance)){					
-					if (IsLocked == false){
-						Activate ();
-					}
-				}
-			}
-		}
+        void TryToOpen()
+        {
+            if (IsLocked) return;
+
+            float dist = Vector3.Distance(transform.position, Player.transform.position);
+
+            if (dist <= MaxDistance && DoorClosed && Rotating == false)
+            {
+                Open();
+            }
+
+            if (dist > MaxDistance && !DoorClosed && Rotating == false)
+            {
+                Close();
+            }
+        }
 
 
 
-		void CursorHint(){
+
+        void CursorHint(){
 			if (Mathf.Abs(Vector3.Distance(transform.position, Player.transform.position)) <= MaxDistance){	
 				Ray ray = Cam.ScreenPointToRay (new Vector3 (Screen.width / 2, Screen.height / 2, 0));
 				RaycastHit hit;
