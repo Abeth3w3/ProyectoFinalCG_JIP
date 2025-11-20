@@ -3247,6 +3247,7 @@ GameObject:
   - component: {fileID: 2024204818}
   - component: {fileID: 2024204817}
   - component: {fileID: 2024204816}
+  - component: {fileID: 2024204819}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -3309,12 +3310,24 @@ Transform:
   m_GameObject: {fileID: 2024204815}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1294, y: -676, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2057089984}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2024204819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2024204815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19105, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.InputSystem.InputSystemEventSystem
 --- !u!1 &2057089983
 GameObject:
   m_ObjectHideFlags: 0
@@ -3347,7 +3360,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 250675906}
-  - {fileID: 2024204818}
   m_Father: {fileID: 1583434342}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -3594,3 +3606,4 @@ SceneRoots:
   - {fileID: 1583434342}
   - {fileID: 1473555777}
   - {fileID: 1426877728}
+  - {fileID: 2024204818}
