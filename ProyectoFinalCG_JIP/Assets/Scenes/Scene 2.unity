@@ -6856,7 +6856,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f27b270699effda46b4ca7d55ea663cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 100
+  maxHealth: 105
   healthBar: {fileID: 0}
   deathEffect: {fileID: 0}
   enableColorChange: 1
