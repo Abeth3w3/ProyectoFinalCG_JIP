@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GluttonyEnemy : MonoBehaviour
 {
+    public System.Action<GluttonyEnemy> onEnemyDeath;
     public int rutina;
     public float cronometro;
     public Animator animator;
@@ -17,29 +19,66 @@ public class GluttonyEnemy : MonoBehaviour
     public AudioClip deathSound;
     public ParticleSystem deathParticles;
 
-    [Header("Ataque")]
+    [Header("Detección y Ataque")]
     public float attackDamage = 15f;
     public float attackCooldown = 2f;
-    private float attackTimer = 0f;
     public float attackRange = 2f;
+    public float detectionRange = 8f;
+    public float visionAngle = 120f;
+
+    [Header("Cambio de Escena al Morir")]
+    public string nextSceneName = "Nivel2";
+    public float sceneChangeDelay = 3f;
+
+    private float attackTimer = 0f;
+    private bool playerDetected = false;
+
+    
+    private bool isDead = false;
 
     void Start()
     {
         animator = GetComponent<Animator>();
         currentHealth = maxHealth;
+
+        if (target == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+                target = player.transform;
+        }
     }
+
+    void Update()
+    {
+        if (isDead) return; 
+
+        if (currentHealth > 0 && target != null)
+        {
+            Comportamiento_Enemigo();
+        }
+    }
+
+    
 
     public void Comportamiento_Enemigo()
     {
         if (attackTimer > 0)
-        {
             attackTimer -= Time.deltaTime;
-        }
 
         float distanceToTarget = Vector3.Distance(transform.position, target.position);
 
-        // Si está lejos del jugador (modo patrulla)
-        if (distanceToTarget > 5)
+        if (distanceToTarget <= detectionRange)
+        {
+            playerDetected = true;
+            cronometro = 0;
+        }
+        else if (distanceToTarget > detectionRange * 1.5f)
+        {
+            playerDetected = false;
+        }
+
+        if (!playerDetected)
         {
             animator.SetBool("run", false);
             cronometro += Time.deltaTime;
@@ -68,73 +107,106 @@ public class GluttonyEnemy : MonoBehaviour
                     animator.SetBool("walk", true);
                     break;
             }
+
+            return;
+        }
+
+        Vector3 lookPos = target.position - transform.position;
+        lookPos.y = 0;
+        Quaternion rotation = Quaternion.LookRotation(lookPos);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, 2f);
+
+        animator.SetBool("walk", false);
+
+        if (distanceToTarget > attackRange)
+        {
+            animator.SetBool("run", true);
+            transform.Translate(Vector3.forward * 14f * Time.deltaTime);
         }
         else
         {
-            // MODO PERSECUCIÓN
-            Vector3 lookPos = target.position - transform.position;
-            lookPos.y = 0;
+            animator.SetBool("run", false);
 
-            Quaternion rotation = Quaternion.LookRotation(lookPos);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, 2f);
-
-            animator.SetBool("walk", false);
-
-            // Solo correr si no está en rango de ataque
-            if (distanceToTarget > attackRange)
+            if (attackTimer <= 0 && CanSeePlayer())
             {
-                animator.SetBool("run", true);
-                transform.Translate(Vector3.forward * 3f * Time.deltaTime);
-            }
-            else
-            {
-                animator.SetBool("run", false);
-
-                // Atacar si está en rango
-                if (attackTimer <= 0)
-                {
-                    AttackPlayer();
-                }
+                AttackPlayer();
             }
         }
     }
 
-    // Ataque al jugador
+    bool CanSeePlayer()
+    {
+        if (target == null) return false;
+
+        Vector3 eyePos = transform.position + Vector3.up * 1.6f;
+        Vector3 direction = (target.position + Vector3.up * 1.2f) - eyePos;
+
+        float angle = Vector3.Angle(transform.forward, direction);
+
+        if (angle < visionAngle / 2f)
+        {
+            if (Physics.Raycast(eyePos, direction.normalized, out RaycastHit hit, detectionRange))
+            {
+                Debug.DrawRay(eyePos, direction.normalized * detectionRange, Color.red);
+
+                if (hit.collider.CompareTag("Player"))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
     void AttackPlayer()
     {
-        animator.SetTrigger("attack");
-        PlayerHealth playerHealth = target.GetComponent<PlayerHealth>();
-        if (playerHealth != null)
-        {
-            playerHealth.TakeDamage((int)attackDamage);
-        }
+        if (target == null) return;
 
-        attackTimer = attackCooldown;
-        Debug.Log("👊 Enemigo ataca al jugador");
+        float distance = Vector3.Distance(transform.position, target.position);
+        if (distance <= attackRange)
+        {
+            animator.SetTrigger("attack");
+
+            PlayerHealth playerHealth = target.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+                playerHealth.TakeDamage((int)attackDamage);
+
+            attackTimer = attackCooldown;
+        }
     }
 
-    // Recibir daño (ESTE MÉTODO USA LA HAMBURGUESA)
+    public void OnAttackAnimationEvent()
+    {
+        Debug.Log("🗡️ Animación de ataque ejecutada");
+    }
+
+    
+
     public void TakeDamage(int damage)
     {
+        if (isDead) return;
+
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
 
-        Debug.Log($"🎯 Enemigo recibe {damage} daño. HP: {currentHealth}/{maxHealth}");
-
-        // Animación de daño
         animator.SetTrigger("hit");
 
-        // Muerte
-        if (currentHealth <= 0)
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
         {
-            Die();
+            target = player.transform;
+            playerDetected = true;
         }
+
+        if (currentHealth <= 0)
+            Die();
     }
 
-    // Muerte del enemigo
     void Die()
     {
-        Debug.Log("☠️ Enemigo derrotado");
+        if (isDead) return;
+        isDead = true;
+
+        onEnemyDeath?.Invoke(this);
 
         if (deathSound != null)
             AudioSource.PlayClipAtPoint(deathSound, transform.position);
@@ -142,32 +214,50 @@ public class GluttonyEnemy : MonoBehaviour
         if (deathParticles != null)
             Instantiate(deathParticles, transform.position, Quaternion.identity);
 
-        // Desactivar colisiones y script
-        GetComponent<Collider>().enabled = false;
-        this.enabled = false;
+        
+        Collider col = GetComponent<Collider>();
+        if (col != null) col.enabled = false;
 
-        // Animación de muerte
-        animator.SetTrigger("die");
+       
+        animator.SetTrigger("Die"); 
 
-        // Destruir después de un tiempo
-        Destroy(gameObject, 3f);
+        this.enabled = false; 
+
+        
+        Invoke(nameof(ChangeToNextScene), sceneChangeDelay);
+
+        
+        Destroy(gameObject, sceneChangeDelay + 1f);
     }
 
-    void Update()
+    void ChangeToNextScene()
     {
-        if (currentHealth > 0) // Solo ejecutar si está vivo
+        if (!string.IsNullOrEmpty(nextSceneName))
         {
-            Comportamiento_Enemigo();
+            Debug.Log("Cambiando a escena: " + nextSceneName);
+
+            
+            SceneManager.LoadScene(nextSceneName);
+        }
+        else
+        {
+            Debug.LogWarning("NextSceneName no está asignado en el inspector");
         }
     }
 
-    // Debug visual de rangos
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, 5f); // Rango de detección
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
+
+        Gizmos.color = Color.blue;
+        Vector3 left = Quaternion.Euler(0, -visionAngle / 2, 0) * transform.forward * detectionRange;
+        Vector3 right = Quaternion.Euler(0, visionAngle / 2, 0) * transform.forward * detectionRange;
+
+        Gizmos.DrawRay(transform.position, left);
+        Gizmos.DrawRay(transform.position, right);
     }
 }

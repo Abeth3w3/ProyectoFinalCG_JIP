@@ -25,7 +25,7 @@ public class BurgerProjectile : MonoBehaviour
             if (enemy != null)
             {
                 enemy.TakeDamage(damage);
-                Debug.Log($"🍔 Hamburguesa hizo {damage} de daño a {other.name}");
+                Debug.Log("Hamburguesa hizo {damage} de daño a {other.name}");
             }
         }
 
