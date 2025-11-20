@@ -13,6 +13,11 @@ public class MainMenuController : MonoBehaviour
         SceneManager.LoadScene("StatsScene");
     }
 
+    public void OpenControls()
+    {
+        SceneManager.LoadScene("ControlsScene");
+    }
+
     public void ExitGame()
     {
         Debug.Log("Saliendo del juego...");

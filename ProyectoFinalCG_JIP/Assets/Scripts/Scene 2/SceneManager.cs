@@ -37,7 +37,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        gameTimer = FindObjectOfType<GameTimer>();
+        gameTimer = FindObjectOfType<GameTimer>();  
 
         // Asegurarse de que los paneles estén desactivados al inicio
         if (gameOverPanel != null)
