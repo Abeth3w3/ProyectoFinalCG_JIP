@@ -1406,6 +1406,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScoreUI
   scoreText: {fileID: 113043923}
   timerText: {fileID: 607776366}
+  sceneText: {fileID: 0}
   updateInterval: 0.1
   normalTimeColor: {r: 0, g: 1, b: 0, a: 1}
   warningTimeColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
