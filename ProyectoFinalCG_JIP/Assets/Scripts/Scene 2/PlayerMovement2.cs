@@ -66,7 +66,7 @@ public class PlayerMovement2 : MonoBehaviour
         {
             animator.SetBool("isWalking", false);
             animator.SetBool("isRunning", false);
-            animator.SetBool("isCrouching", isCrouching);
+         
         }
 
         // --- Salto ---
