@@ -19,13 +19,13 @@ public class PlayerHealth : MonoBehaviour
 
     private bool isInvincible = false;
     private float invincibilityTimer = 0f;
-    private PlayerMovement playerMovement;
+    private PlayerMovementScene1 playerMovement; // ← CAMBIADO A PlayerMovementScene1
     private CharacterController controller;
 
     void Start()
     {
         currentHealth = maxHealth;
-        playerMovement = GetComponent<PlayerMovement>();
+        playerMovement = GetComponent<PlayerMovementScene1>(); // ← CAMBIADO A PlayerMovementScene1
         controller = GetComponent<CharacterController>();
         UpdateHealthUI();
     }
@@ -42,7 +42,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
-        if (isInvincible || (playerMovement != null && playerMovement.IsInvincible()))
+        if (isInvincible || (playerMovement != null && playerMovement.IsInvincible)) // ← Usar IsInvincible (con I mayúscula)
             return;
 
         currentHealth -= damage;
@@ -62,7 +62,13 @@ public class PlayerHealth : MonoBehaviour
         UpdateHealthUI();
 
         if (currentHealth <= 0)
+        {
+            if (GameDataManager.Instance != null)
+            {
+                GameDataManager.Instance.AddPlayerDeath();
+            }
             Die();
+        }
     }
 
     public void Heal(int healAmount)
@@ -82,7 +88,7 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("☠ Jugador murió");
+        Debug.Log("Jugador murio");
 
         if (playerMovement != null)
             playerMovement.enabled = false;
@@ -113,6 +119,6 @@ public class PlayerHealth : MonoBehaviour
         if (playerMovement != null)
             playerMovement.enabled = true;
 
-        Debug.Log("🟢 Player respawneado con éxito");
+        Debug.Log("Player respawneado con exito");
     }
 }

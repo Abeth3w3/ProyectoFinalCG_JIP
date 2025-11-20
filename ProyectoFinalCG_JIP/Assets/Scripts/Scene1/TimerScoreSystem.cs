@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class TimerScoreSystem : MonoBehaviour
 {
@@ -12,11 +13,25 @@ public class TimerScoreSystem : MonoBehaviour
 
     private float enemySpawnTime;
     private bool enemyAlive = false;
-    private int totalScore = 0;
+
+    void Awake()
+    {
+        // Hacer persistente entre escenas
+        DontDestroyOnLoad(gameObject);
+    }
 
     void Start()
     {
+        SceneManager.sceneLoaded += OnSceneLoaded;
         FindEnemy();
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Reiniciar para nueva escena
+        currentEnemy = null;
+        enemyAlive = false;
+        Invoke(nameof(FindEnemy), 0.5f);
     }
 
     void Update()
@@ -32,6 +47,8 @@ public class TimerScoreSystem : MonoBehaviour
 
     void FindEnemy()
     {
+        if (enemyAlive && currentEnemy != null && currentEnemy.currentHealth > 0) return;
+
         GluttonyEnemy[] enemies = FindObjectsByType<GluttonyEnemy>(FindObjectsSortMode.None);
 
         foreach (GluttonyEnemy enemy in enemies)
@@ -66,9 +83,14 @@ public class TimerScoreSystem : MonoBehaviour
         {
             float killTime = Time.time - enemySpawnTime;
             int points = CalculatePoints(killTime);
-            totalScore += points;
 
-            Debug.Log($"Enemigo derrotado en {killTime:F1}s! +{points} puntos | Total: {totalScore}");
+            if (GameDataManager.Instance != null)
+            {
+                GameDataManager.Instance.AddScore(points);
+                GameDataManager.Instance.AddEnemyKill();
+            }
+
+            Debug.Log($"Enemigo derrotado en {killTime:F1}s! +{points} puntos | Total: {GetTotalScore()}");
 
             enemyAlive = false;
             enemy.onEnemyDeath -= OnEnemyDeath;
@@ -91,17 +113,13 @@ public class TimerScoreSystem : MonoBehaviour
         return Mathf.Max(minPoints, finalPoints);
     }
 
-    public void SetCurrentEnemy(GluttonyEnemy enemy)
-    {
-        if (enemy != null && enemy.currentHealth > 0)
-        {
-            StartTrackingEnemy(enemy);
-        }
-    }
-
     public int GetTotalScore()
     {
-        return totalScore;
+        if (GameDataManager.Instance != null)
+        {
+            return GameDataManager.Instance.GetGameData().totalScore;
+        }
+        return 0;
     }
 
     public bool IsEnemyAlive()
@@ -123,23 +141,8 @@ public class TimerScoreSystem : MonoBehaviour
         return maxTime;
     }
 
-    public int GetCurrentPoints()
+    void OnDestroy()
     {
-        if (enemyAlive)
-        {
-            float currentTime = GetCurrentTime();
-            return CalculatePoints(currentTime);
-        }
-        return maxPoints;
-    }
-
-    void OnGUI()
-    {
-        GUI.Label(new Rect(10, 10, 300, 20), $"Puntos: {totalScore}");
-        if (enemyAlive)
-        {
-            float timeElapsed = Time.time - enemySpawnTime;
-            GUI.Label(new Rect(10, 30, 300, 20), $"Tiempo: {timeElapsed:F1}s / {maxTime}s");
-        }
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 }

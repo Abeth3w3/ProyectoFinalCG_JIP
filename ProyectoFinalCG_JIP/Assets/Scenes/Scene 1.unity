@@ -452,7 +452,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
   throwPoint: {fileID: 96717479}
   burgerProjectile: {fileID: 7892235983025369193, guid: fe92b653269eb114a99a62a86973e151, type: 3}
-  throwForce: 30
+  throwForce: 60
   attackCooldown: 0.5
   burgerInHand: {fileID: 96717478}
 --- !u!114 &142954083
@@ -468,11 +468,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHealth: 100
-  currentHealth: 100
+  currentHealth: 0
   healthText: {fileID: 0}
-  damageSound: {fileID: 0}
+  damageSound: {fileID: 8300000, guid: 754024c007b4c464ab9b1a2b5554e175, type: 3}
   damageParticles: {fileID: 0}
   invincibilityTime: 1
+  respawnPoint: {fileID: 1413442817}
+  respawnDelay: 1.5
 --- !u!1 &161494923
 GameObject:
   m_ObjectHideFlags: 0
@@ -1158,9 +1160,11 @@ MonoBehaviour:
   deathParticles: {fileID: 0}
   attackDamage: 15
   attackCooldown: 2
-  attackRange: 2
-  detectionRange: 8
-  visionAngle: 120
+  attackRange: 7.64
+  detectionRange: 81.9
+  visionAngle: 360
+  nextSceneName: Scene 2
+  sceneChangeDelay: 2
 --- !u!95 &686544110 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 27c70984b9f4990489d83faa91f41371, type: 3}
@@ -1319,6 +1323,50 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -86.7495, y: 4.2599945, z: -172.44305}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &710306215
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 710306217}
+  - component: {fileID: 710306216}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &710306216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 710306215}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5e3575ab4c185348b74c54d67a45b8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDataManager
+--- !u!4 &710306217
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 710306215}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -42929.105, y: 0, z: 755661.56}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1785,6 +1833,37 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &1413442816
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1413442817}
+  m_Layer: 0
+  m_Name: RespawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1413442817
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1413442816}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -89.1, y: 1.89, z: -155.67}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1430618449
 GameObject:
   m_ObjectHideFlags: 0
@@ -2656,3 +2735,5 @@ SceneRoots:
   - {fileID: 1430618451}
   - {fileID: 1866610464}
   - {fileID: 772418274}
+  - {fileID: 1413442817}
+  - {fileID: 710306217}

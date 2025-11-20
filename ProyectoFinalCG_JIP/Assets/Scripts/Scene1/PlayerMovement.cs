@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovementScene1 : MonoBehaviour
 {
     public CharacterController controller;
     public Transform cam;
@@ -137,7 +137,6 @@ public class PlayerMovement : MonoBehaviour
 
         rollDirection = rollDirection.normalized;
 
-        
         animator.SetBool("IsRolling", true);
 
         Invoke("EndRoll", rollDuration);
@@ -154,13 +153,13 @@ public class PlayerMovement : MonoBehaviour
         isRolling = false;
         isInvincible = false;
 
-        
         animator.SetBool("IsRolling", false);
     }
 
-    public bool IsInvincible()
+    // ✅ CORREGIDO: Propiedad pública para acceder desde PlayerHealth
+    public bool IsInvincible
     {
-        return isInvincible;
+        get { return isInvincible; }
     }
 
     private void OnDrawGizmosSelected()

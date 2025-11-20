@@ -66,6 +66,11 @@ public class PlayerCombat : MonoBehaviour
                 Debug.Log("Burger lanzada!");
             }
 
+            if (GameDataManager.Instance != null)
+            {
+                GameDataManager.Instance.AddBurgerThrown();
+            }
+
             InventoryManager.Instance.UseSlot1();
             attackTimer = attackCooldown;
         }
@@ -86,9 +91,10 @@ public class PlayerCombat : MonoBehaviour
             {
                 playerHealth.Heal(25);
             }
-            else
+
+            if (GameDataManager.Instance != null)
             {
-                Debug.LogWarning("PlayerHealth no encontrado en el jugador");
+                GameDataManager.Instance.AddDrinkUsed();
             }
 
             InventoryManager.Instance.UseSlot2();

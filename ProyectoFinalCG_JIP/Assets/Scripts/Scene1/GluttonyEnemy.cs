@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GluttonyEnemy : MonoBehaviour
 {
@@ -25,8 +26,15 @@ public class GluttonyEnemy : MonoBehaviour
     public float detectionRange = 8f;
     public float visionAngle = 120f;
 
+    [Header("Cambio de Escena al Morir")]
+    public string nextSceneName = "Nivel2";
+    public float sceneChangeDelay = 3f;
+
     private float attackTimer = 0f;
     private bool playerDetected = false;
+
+    
+    private bool isDead = false;
 
     void Start()
     {
@@ -43,13 +51,16 @@ public class GluttonyEnemy : MonoBehaviour
 
     void Update()
     {
+        if (isDead) return; 
+
         if (currentHealth > 0 && target != null)
         {
             Comportamiento_Enemigo();
         }
     }
 
-    // ===== COMPORTAMIENTO PRINCIPAL =====
+    
+
     public void Comportamiento_Enemigo()
     {
         if (attackTimer > 0)
@@ -57,7 +68,6 @@ public class GluttonyEnemy : MonoBehaviour
 
         float distanceToTarget = Vector3.Distance(transform.position, target.position);
 
-        // Detecta sin necesidad de visión exacta
         if (distanceToTarget <= detectionRange)
         {
             playerDetected = true;
@@ -68,7 +78,6 @@ public class GluttonyEnemy : MonoBehaviour
             playerDetected = false;
         }
 
-        // ===== PATRULLA =====
         if (!playerDetected)
         {
             animator.SetBool("run", false);
@@ -102,7 +111,6 @@ public class GluttonyEnemy : MonoBehaviour
             return;
         }
 
-        // ===== PERSECUCIÓN =====
         Vector3 lookPos = target.position - transform.position;
         lookPos.y = 0;
         Quaternion rotation = Quaternion.LookRotation(lookPos);
@@ -110,17 +118,15 @@ public class GluttonyEnemy : MonoBehaviour
 
         animator.SetBool("walk", false);
 
-        // CORRER si no está en rango
         if (distanceToTarget > attackRange)
         {
             animator.SetBool("run", true);
-            transform.Translate(Vector3.forward * 10f * Time.deltaTime);
+            transform.Translate(Vector3.forward * 14f * Time.deltaTime);
         }
         else
         {
             animator.SetBool("run", false);
 
-            // ATAQUE si está cerca y puede ver al jugador
             if (attackTimer <= 0 && CanSeePlayer())
             {
                 AttackPlayer();
@@ -128,12 +134,11 @@ public class GluttonyEnemy : MonoBehaviour
         }
     }
 
-    // ===== VISIÓN DEL ENEMIGO (CORREGIDA) =====
     bool CanSeePlayer()
     {
         if (target == null) return false;
 
-        Vector3 eyePos = transform.position + Vector3.up * 1.6f; // altura correcta
+        Vector3 eyePos = transform.position + Vector3.up * 1.6f;
         Vector3 direction = (target.position + Vector3.up * 1.2f) - eyePos;
 
         float angle = Vector3.Angle(transform.forward, direction);
@@ -152,7 +157,6 @@ public class GluttonyEnemy : MonoBehaviour
         return false;
     }
 
-    // ===== ATAQUE =====
     void AttackPlayer()
     {
         if (target == null) return;
@@ -160,7 +164,7 @@ public class GluttonyEnemy : MonoBehaviour
         float distance = Vector3.Distance(transform.position, target.position);
         if (distance <= attackRange)
         {
-            animator.SetTrigger("attack"); // AHORA SÍ SE ACTIVA
+            animator.SetTrigger("attack");
 
             PlayerHealth playerHealth = target.GetComponent<PlayerHealth>();
             if (playerHealth != null)
@@ -175,15 +179,17 @@ public class GluttonyEnemy : MonoBehaviour
         Debug.Log("🗡️ Animación de ataque ejecutada");
     }
 
-    // ===== DAÑO =====
+    
+
     public void TakeDamage(int damage)
     {
+        if (isDead) return;
+
         currentHealth -= damage;
         currentHealth = Mathf.Max(0, currentHealth);
 
         animator.SetTrigger("hit");
 
-        // Forzar detección al ser golpeado
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
@@ -195,9 +201,11 @@ public class GluttonyEnemy : MonoBehaviour
             Die();
     }
 
-    // ===== MUERTE =====
     void Die()
     {
+        if (isDead) return;
+        isDead = true;
+
         onEnemyDeath?.Invoke(this);
 
         if (deathSound != null)
@@ -206,16 +214,37 @@ public class GluttonyEnemy : MonoBehaviour
         if (deathParticles != null)
             Instantiate(deathParticles, transform.position, Quaternion.identity);
 
+        
         Collider col = GetComponent<Collider>();
         if (col != null) col.enabled = false;
 
-        this.enabled = false;
-        animator.SetTrigger("die");
+       
+        animator.SetTrigger("Die"); 
 
-        Destroy(gameObject, 3f);
+        this.enabled = false; 
+
+        
+        Invoke(nameof(ChangeToNextScene), sceneChangeDelay);
+
+        
+        Destroy(gameObject, sceneChangeDelay + 1f);
     }
 
-    // ===== DEBUG =====
+    void ChangeToNextScene()
+    {
+        if (!string.IsNullOrEmpty(nextSceneName))
+        {
+            Debug.Log("Cambiando a escena: " + nextSceneName);
+
+            
+            SceneManager.LoadScene(nextSceneName);
+        }
+        else
+        {
+            Debug.LogWarning("NextSceneName no está asignado en el inspector");
+        }
+    }
+
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;

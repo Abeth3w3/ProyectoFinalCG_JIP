@@ -1,11 +1,13 @@
 ﻿using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class ScoreUI : MonoBehaviour
 {
     [Header("Referencias UI")]
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI timerText;
+    public TextMeshProUGUI sceneText;
 
     [Header("Configuración")]
     public float updateInterval = 0.1f;
@@ -16,34 +18,38 @@ public class ScoreUI : MonoBehaviour
     private TimerScoreSystem scoreSystem;
     private float lastUpdateTime;
 
+    void Awake()
+    {
+        // Hacer persistente entre escenas
+        DontDestroyOnLoad(gameObject);
+    }
+
     void Start()
     {
-        // Buscar el sistema de puntos en la escena
-        scoreSystem = FindAnyObjectByType<TimerScoreSystem>();
+        FindScoreSystem();
+        SceneManager.sceneLoaded += OnSceneLoaded;
 
-        // Verificar que todo esté asignado
-        if (scoreText == null)
+        if (scoreText == null) Debug.LogError("ScoreText no asignado");
+        if (timerText == null) Debug.LogWarning("TimerText no asignado");
+
+        UpdateUI();
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Actualizar texto de escena
+        if (sceneText != null)
         {
-            Debug.LogError("ScoreText no asignado en ScoreUI");
+            sceneText.text = $"Escena: {scene.name}";
         }
 
-        if (timerText == null)
-        {
-            Debug.LogWarning("TimerText no asignado - el timer no se mostrará");
-        }
-
-        if (scoreSystem == null)
-        {
-            Debug.LogWarning("TimerScoreSystem no encontrado en la escena");
-        }
-
-        // Primera actualización
+        // Buscar el sistema de puntuación en la nueva escena
+        FindScoreSystem();
         UpdateUI();
     }
 
     void Update()
     {
-        // Actualizar UI a intervalos regulares (mejor performance)
         if (Time.time - lastUpdateTime >= updateInterval)
         {
             UpdateUI();
@@ -51,41 +57,54 @@ public class ScoreUI : MonoBehaviour
         }
     }
 
+    void FindScoreSystem()
+    {
+        // Reemplazar FindObjectOfType con la versión no obsoleta
+        scoreSystem = FindFirstObjectByType<TimerScoreSystem>();
+
+        // Si no se encuentra, intentar con la versión más rápida
+        if (scoreSystem == null)
+        {
+            scoreSystem = FindAnyObjectByType<TimerScoreSystem>();
+        }
+    }
+
     void UpdateUI()
     {
-        // Actualizar texto de puntos
-        if (scoreText != null && scoreSystem != null)
+        if (scoreSystem == null)
+        {
+            FindScoreSystem();
+            return;
+        }
+
+        // Actualizar puntuación
+        if (scoreText != null)
         {
             scoreText.text = $"Puntos: {scoreSystem.GetTotalScore()}";
         }
-        else if (scoreText != null)
-        {
-            scoreText.text = "Puntos: 0";
-        }
 
-        // Actualizar texto del timer
-        if (timerText != null && scoreSystem != null)
+        // Actualizar timer
+        if (timerText != null)
         {
             if (scoreSystem.IsEnemyAlive())
             {
                 float currentTime = scoreSystem.GetCurrentTime();
                 float maxTime = scoreSystem.GetMaxTime();
 
-                // Actualizar texto
                 timerText.text = $"Tiempo: {currentTime:F1}s / {maxTime}s";
 
-                // Cambiar color según el tiempo
+                // Cambiar color según tiempo
                 if (currentTime <= maxTime)
                 {
-                    timerText.color = normalTimeColor; // Verde - tiempo bueno
+                    timerText.color = normalTimeColor;
                 }
                 else if (currentTime <= maxTime * 1.5f)
                 {
-                    timerText.color = warningTimeColor; // Amarillo - tiempo regular
+                    timerText.color = warningTimeColor;
                 }
                 else
                 {
-                    timerText.color = criticalTimeColor; // Rojo - tiempo malo
+                    timerText.color = criticalTimeColor;
                 }
             }
             else
@@ -96,9 +115,8 @@ public class ScoreUI : MonoBehaviour
         }
     }
 
-    // Método público para forzar actualización
-    public void RefreshUI()
+    void OnDestroy()
     {
-        UpdateUI();
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 }
