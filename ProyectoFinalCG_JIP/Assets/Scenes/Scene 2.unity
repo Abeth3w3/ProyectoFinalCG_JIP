@@ -150,6 +150,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1329469812}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &113815326
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 113815328}
+  - component: {fileID: 113815327}
+  m_Layer: 0
+  m_Name: Gamemanager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &113815327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 113815326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e90df455e795d374da2f85622f24879d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  gameOverPanel: {fileID: 0}
+  victoryPanel: {fileID: 0}
+  pointsText: {fileID: 0}
+  finalPointsText: {fileID: 0}
+  timeRemainingText: {fileID: 0}
+  basePoints: 100
+  mediumPoints: 70
+  lowPoints: 50
+--- !u!4 &113815328
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 113815326}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 545.5487, y: 20.5486, z: 567.5447}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &161494923
 GameObject:
   m_ObjectHideFlags: 0
@@ -164,6 +216,7 @@ GameObject:
   - component: {fileID: 161494927}
   - component: {fileID: 161494929}
   - component: {fileID: 161494930}
+  - component: {fileID: 161494931}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -333,16 +386,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: beac96ca1f6de5649a73346873f93e91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCamera
+--- !u!114 &161494931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 161494923}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 204934a44e833f8428c9c190c4415c40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCamera
   target: {fileID: 1329469812}
-  targetOffset: {x: 0, y: 1.5, z: 0}
-  distance: 5
-  minDistance: 2
-  maxDistance: 10
-  mouseSensitivity: 100
-  rotationSmoothTime: 0.1
-  minVerticalAngle: -30
-  maxVerticalAngle: 70
-  positionSmoothTime: 0.1
+  offset: {x: 1, y: 1.4, z: 3}
+  smoothSpeed: 10
+  mouseSensitivity: 85
+  maxLookAngle: 100
 --- !u!1001 &200305825
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -938,6 +998,9 @@ MonoBehaviour:
   deathEffect: {fileID: 0}
   flashDuration: 0.2
   flashColor: {r: 1, g: 0, b: 0, a: 1}
+  enableColorChange: 1
+  fullHealthColor: {r: 1, g: 1, b: 1, a: 1}
+  lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!114 &644475988
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -954,7 +1017,7 @@ MonoBehaviour:
   speedBurstMultiplier: 1.8
   chaseRange: 15
   minDistanceToPlayer: 2
-  attackRange: 2
+  attackRange: 1.4
   meleeDamage: 6
   damageCooldown: 1
   minBurstInterval: 3
@@ -1785,9 +1848,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 675ace4db60e6104d80d06413699e335, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1329469817}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 675ace4db60e6104d80d06413699e335, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1329469818}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 675ace4db60e6104d80d06413699e335, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1329469819}
@@ -6782,7 +6842,7 @@ MonoBehaviour:
   jumpHeight: 1.5
   standingHeight: 2
   crouchingHeight: 1.2
-  standingCenter: {x: 0, y: 1, z: 0}
+  standingCenter: {x: 0, y: 0, z: 0}
   crouchingCenter: {x: 0, y: 0.6, z: 0}
 --- !u!114 &1329469817
 MonoBehaviour:
@@ -6802,20 +6862,6 @@ MonoBehaviour:
   enableColorChange: 1
   fullHealthColor: {r: 1, g: 1, b: 1, a: 1}
   lowHealthColor: {r: 1, g: 0, b: 0, a: 1}
---- !u!114 &1329469818
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1329469811}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e8a8ffb7e891744697fa2b08c827075, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerAttack
-  attackRange: 2
-  attackDamage: 10
 --- !u!114 &1329469819
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6992,6 +7038,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameTimer
   timerText: {fileID: 706864692}
   gameTime: 60
+  tutorialDuration: 5
 --- !u!4 &1381911897
 Transform:
   m_ObjectHideFlags: 0
@@ -7598,9 +7645,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OrbitalSword
   playerCenter: {fileID: 503947811}
   orbitRadius: 1.8
-  orbitSpeed: 200
+  orbitSpeed: 350
   orbitHeight: 1
-  damage: 30
+  damage: 100
   damageRadius: 1
   attackCooldown: 0.3
   swordRotation: {x: 90, y: 0, z: 0}
@@ -7627,3 +7674,4 @@ SceneRoots:
   - {fileID: 982406389}
   - {fileID: 1637065053}
   - {fileID: 1226883055}
+  - {fileID: 113815328}
